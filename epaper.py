@@ -49,9 +49,7 @@ def merge_images_to_pdf(images_path:list[str], output_path:str):
   pdf.output(output_path, 'F')
 
 # Download the todays epaper version of el mundo and returns the pdf local file path and file name
-def download_epaper() -> dict:
-  date = datetime.utcnow() - timedelta(hours=6)
-  edition:str = f'mundo{date.strftime("%d%m%y")}'
+def download_epaper(edition: str) -> dict:
   # Download the epaper json object
   epaper_json = download_epaper_json(edition)
   # Download the epaper images, store them in temp dir edition
@@ -60,7 +58,7 @@ def download_epaper() -> dict:
   epaper_filename = f'{edition}.pdf'
   pdf_output_path = f'{tempfile.gettempdir()}/{edition}/{epaper_filename}'
   merge_images_to_pdf(images_path_collection, pdf_output_path)
-  return { 'file_name': epaper_filename, 'file_path': pdf_output_path }
+  return { 'edition': edition, 'cover_file_path': images_path_collection[0],  'epaper_file_path': pdf_output_path }
 
 # Upload the file to backblaze storage service
 def upload_epaper_to_backblaze(pdf_info:dict, app_key_id:str, app_key:str, bucket_name:str):
@@ -68,11 +66,15 @@ def upload_epaper_to_backblaze(pdf_info:dict, app_key_id:str, app_key:str, bucke
   b2_api:B2Api = B2Api(info)
   b2_api.authorize_account('production', app_key_id, app_key)
   bucket = b2_api.get_bucket_by_name(bucket_name)
-  print(f'Uploading {pdf_info["file_name"]}')
-  bucket.upload_local_file(local_file=pdf_info['file_path'], file_name = pdf_info['file_name'])
-  print('File uploaded.')
+  print(f'Uploading {pdf_info["cover_file_path"]}')
+  bucket.upload_local_file(local_file=pdf_info['cover_file_path'], file_name = f'cover_{pdf_info["edition"]}.jpg')
+  print(f'Uploading {pdf_info["epaper_file_path"]}')
+  bucket.upload_local_file(local_file=pdf_info['epaper_file_path'], file_name = f'{pdf_info["edition"]}.pdf')
+  print('Files uploaded.')
 
 # # Starts the epaper download job
-epaper_file_info:dict = download_epaper()
+date = datetime.utcnow() - timedelta(hours=6)
+edition:str = f'mundo{date.strftime("%d%m%y")}'
+epaper_file_info:dict = download_epaper(edition)
 # # Upload the pdf file
 upload_epaper_to_backblaze(epaper_file_info, BLAZE_APP_KEY_ID, BLAZE_APP_KEY, BLAZE_BUCKET_NAME)
