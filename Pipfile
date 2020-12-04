@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 requests = "*"
 fpdf = "*"
+b2sdk = "*"
 
 [dev-packages]
 
