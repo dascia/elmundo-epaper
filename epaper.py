@@ -85,6 +85,7 @@ while(!is_task_successful):
     upload_epaper_to_backblaze(epaper_file_info, BLAZE_APP_KEY_ID, BLAZE_APP_KEY, BLAZE_BUCKET_NAME)
     is_task_successful = True
   except Exception as ex:
-    print(f"Error processing the newspaper edition: {ex}")
+    print(f'Error processing the newspaper edition: {ex}')
     # if scripts fails execute it again in 15 minutes
+    print('Waiting 15 minutes to execute it again.')
     time.sleep(900)
