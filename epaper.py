@@ -78,7 +78,7 @@ def download_epaper(edition: str) -> dict:
 date = datetime.utcnow() - timedelta(hours=6)
 edition:str = f'mundo{date.strftime("%d%m%y")}'
 is_task_successful:bool = False
-while(!is_task_successful):
+while(is_task_successful == False):
   try:
     epaper_file_info:dict = download_epaper(edition)
     # Upload the pdf file
@@ -88,4 +88,7 @@ while(!is_task_successful):
     print(f'Error processing the newspaper edition: {ex}')
     # if scripts fails execute it again in 15 minutes
     print('Waiting 15 minutes to execute it again.')
-    time.sleep(900)
+    try:
+      time.sleep(900)
+    except KeyboardInterrupt:
+      quit()
