@@ -9,6 +9,7 @@ fpdf = "*"
 b2sdk = "*"
 
 [dev-packages]
+black = "*"
 
 [requires]
 python_version = "3.9"
