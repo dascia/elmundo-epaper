@@ -1,4 +1,4 @@
-import requests, json, shutil, os, tempfile, fpdf, time
+import requests, json, shutil, os, tempfile, fpdf, time, sys
 from datetime import datetime, timedelta
 from b2sdk.v1 import InMemoryAccountInfo, B2Api
 
@@ -74,21 +74,29 @@ def download_epaper(edition: str) -> dict:
   merge_images_to_pdf(images_path_collection, pdf_output_path)
   return { 'edition': edition, 'cover_file_path': images_path_collection[0],  'epaper_file_path': pdf_output_path }
 
-# # Starts the epaper download job
-date = datetime.utcnow() - timedelta(hours=6)
-edition:str = f'mundo{date.strftime("%d%m%y")}'
-is_task_successful:bool = False
-while(is_task_successful == False):
-  try:
-    epaper_file_info:dict = download_epaper(edition)
-    # Upload the pdf file
-    upload_epaper_to_backblaze(epaper_file_info, BLAZE_APP_KEY_ID, BLAZE_APP_KEY, BLAZE_BUCKET_NAME)
-    is_task_successful = True
-  except Exception as ex:
-    print(f'Error processing the newspaper edition: {ex}')
-    # if scripts fails execute it again in 15 minutes
-    print('Waiting 15 minutes to execute it again.')
+# main function to run all the epaper funtion to build the epaper and upload it.
+def main(edition:str):
+  is_task_successful:bool = False
+  while(is_task_successful == False):
     try:
-      time.sleep(900)
-    except KeyboardInterrupt:
-      quit()
+      epaper_file_info:dict = download_epaper(edition)
+      # Upload the pdf file
+      upload_epaper_to_backblaze(epaper_file_info, BLAZE_APP_KEY_ID, BLAZE_APP_KEY, BLAZE_BUCKET_NAME)
+      is_task_successful = True
+    except Exception as ex:
+      print(f'Error processing the newspaper edition: {ex}')
+      # if scripts fails execute it again in 15 minutes
+      print('Waiting 15 minutes to execute it again.')
+      try:
+        time.sleep(900)
+      except KeyboardInterrupt:
+        quit()
+
+if __name__ == "__main__":
+  edition:str
+  if (len(sys.argv) == 2):
+    edition = sys.argv[1]
+  else:
+    date = datetime.utcnow() - timedelta(hours=6)
+    edition = f'mundo{date.strftime("%d%m%y")}'
+  main(edition)
